@@ -3,6 +3,7 @@
 import boto.ec2
 
 import os
+import os.path
 import re
 import sys
 import time
@@ -82,24 +83,54 @@ def write_user_txt(server_ip, outPath):
     print >>fp, "git clone https://github.com/mripley/CloudWork.git"
 
 #compiles the init.txt and user.txt into the combined archive
-def compile_user_data(init, user):
+def compile_user_data(output, init, user):
     # now the compile init.txt and user.txt into our tar archive
-    cmd = "write-mime-multipart --output=combined-userdata.txt user.txt:text/x-shellscript init.txt"
+    cmd = "write-mime-multipart --output=%s %s:text/x-shellscript %s" % (output, user, init)
     subprocess.call(cmd, shell=True)
+
+    # gzip it
+    subprocess.call("gzip combined-userdata.txt", shell=True)
 
 # creates our cloud and waits for it to come up. Returns the connection and 
 # reservation  
 def create_cloud():
-    pass
-
-def main():
+    # track all our reservations
+    res = []
+    rabbitmq-config = "cloud-configs/combined-userdata.txt.gz"
+    
+    # grab a connection 
     conn = conn_from_env()
 
-    res = create_instances("ami-0000000d", "mripleykey", 1, conn, ud_path="combined-userdata.txt.gz")
+    print "----CREATING QUEUE SERVER----"
+    # create out rabbit mq server and wait for it to come up
+    mq_res = create_instances("ami-0000000d", "mripleykey", 1, conn, ud_path=rabbitmq-config)
+    # track this req
+    res.append(mq_res)
+    
+    print "q public ip: " + mq_res.instances[0].ip_address
+    print "q private ip: " + mq_res.instances[0].private_ip_address
+    
+    print "----CREATING WORKERS-----"
+    # lets make some paths to our new worker configs
+    config_path_base = os.path.join("cloud-configs", "worker-init")
+    final_config = os.path.join(config_path_base, "combined-userdata.txt")
 
-    print "instance up and running!"
-    time.sleep(10)
-    print "terminating instances"
+    write_user_txt(mq_req.instances[0].private_ip_address, os.path.join(config_path_base, "user.txt"))
+    compile_user_data(final_config, os.path.join(config_path_base, "init.txt"), 
+                      os.path.join(config_path_base, "user.txt"))
 
-    conn.terminate_instances(res.instances)
+    worker_res = create_instances("ami-0000000d", "mripleykey", 3, conn, ud_path=final_config+".gz")
+    res.append(worker_res)
+
+    for instance in worker_res.instances:
+        print "worker has public ip: "+instance.ip_address
+        print "worker has private ip: "+instance.private_ip_address
+
+    print "----CLOUD CONSTRUCTION FINISHED-----"
+    return res, conn
+
+def main():
+    res, conn = create_cloud()
+
+#    conn.terminate_instances(res.instances)
 main()

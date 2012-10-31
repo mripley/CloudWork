@@ -1,0 +1,21 @@
+#cloud-config
+#don't update apt
+apt_update: false
+
+#don't upgrade packages
+apt_upgrade: false
+
+packages:
+ - rabbitmq-server
+ - zookeeper
+ - protobuf-compiler
+ - python-pip
+ - git-core
+
+#add ssh key
+ssh_authorized_keys:
+ - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJNtpgXRS0uIO6OzoZ4i0aS5vsBmSGtX8ryrVuTqoGqxP8Rm3ynEtMS7cscC8p0HE3xKgfRPMkuCNcwjAEpXNhzRSVZFwpiONG5A0gK6eSZvFsll/gdyx+SytLXvR9cowieDwh8UaGsXkqlrgI7GqH3PRdl+NFzCt77pvqjAzJZPPt2SADK/UPfYpnOwXfQ1nUT4mjMkrZCtCwT8KP62zEnkL3Qaja0pLi0FIUmJ7kStoyIJBLUVyJQj+GV+yXyGVcET8sKycGQOxwYZ16JH0P37pyTp3JUfjKunL/umQyWKEZ5/jr5vebA7Sy9RcOc++SWSAi7wf85E5LcTaVqayj mattew.ripley@gmail.com
+
+runcmd:
+ - [pip, install, pika]
+
