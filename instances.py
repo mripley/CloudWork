@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
 import boto.ec2
-import utility
+
 import os
 import re
 import sys
 import time
+import subprocess
+
+import utility
 
 def conn_from_env():
 
@@ -58,15 +61,32 @@ def create_instances(img_id, key, num, conn=None, ud_path=None):
         conn = conn_from_env()
 
     print "spinning up instances"
+    cloud_init_file = open(ud_path, "r")
     res = conn.run_instances(image_id = img_id, min_count=num, 
-                             key_name=key, user_data=ud_path)
+                             key_name=key, user_data=cloud_init_file.read())
 
     print "waiting for instances to come up"
     wait_on_instances(res.instances)
 
     return res
 
+# writes the user.txt file with commands to create the user.txt file
+# with the rabbitmq server's ip address
+def write_user_txt(server_ip, outPath):
+    fp = open(outPath, "w")
+    print >>fp, "#!/bin/bash"
     
+    # store the ip address in "queue_ip"
+    print >>fp, "echo %s > queue_ip"
+    print >>fp, "mkdir /tmp/data-scale"
+    print >>fp, "git clone https://github.com/mripley/CloudWork.git"
+
+#compiles the init.txt and user.txt into the combined archive
+def compile_user_data(init, user):
+    # now the compile init.txt and user.txt into our tar archive
+    cmd = "write-mime-multipart --output=combined-userdata.txt user.txt:text/x-shellscript init.txt"
+    subprocess.call(cmd, shell=True)
+
 # creates our cloud and waits for it to come up. Returns the connection and 
 # reservation  
 def create_cloud():
@@ -75,11 +95,11 @@ def create_cloud():
 def main():
     conn = conn_from_env()
 
-    res = create_instances("ami-00000019", "mripley-os", 1, conn)
+    res = create_instances("ami-0000000d", "mripleykey", 1, conn, ud_path="combined-userdata.txt.gz")
 
     print "instance up and running!"
     time.sleep(10)
-    print terminating instances
+    print "terminating instances"
 
     conn.terminate_instances(res.instances)
 main()
