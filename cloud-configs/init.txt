@@ -11,6 +11,7 @@ packages:
  - protobuf-compiler
  - python-pip
  - git-core
+ - protobuf
 
 #add ssh key
 ssh_authorized_keys:

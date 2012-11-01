@@ -85,7 +85,7 @@ def write_user_txt(server_ip, outPath):
     print >>fp, "cd /tmp/data-scale"
     print >>fp, "echo %s > queue_ip" %(server_ip)
     print >>fp, "git clone https://github.com/mripley/CloudWork.git"
-    print >>fp, "nohup python /tmp/data-scale/CloudWork/client/compute.py
+    print >>fp, "nohup python /tmp/data-scale/CloudWork/client/compute.py"
 
 #compiles the init.txt and user.txt into the combined archive
 def compile_user_data(output, init, user):
