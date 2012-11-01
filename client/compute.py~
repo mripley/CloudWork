@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+#compute script for our fib cluster
+
+import pika
+import threading,time,sys
+import fib_pb2
+
+Q_IP_PATH = "/tmp/data-scale/queue_ip"
+
+def recieve_request(ch, method, properties, body):
+    pass
+
+def main():
+    pass
+
