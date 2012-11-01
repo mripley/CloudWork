@@ -10,7 +10,7 @@ import threading,time,sys
 import fib_pb2
 
 #QHost = "sdr.cs.colorado.edu"
-QHost= '149.165.158.110'
+QHost= '149.165.158.106'
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(host=QHost))
 

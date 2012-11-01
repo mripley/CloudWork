@@ -101,7 +101,7 @@ def compile_user_data(output, init, user):
 def create_cloud():
     # track all our reservations
     res = []
-    rabbitmq_config = "cloud-configs/combined-userdata.txt.gz"
+    rabbitmq_config = "./cloud-configs/combined-userdata.txt.gz"
     
     # grab a connection 
     conn = conn_from_env()
