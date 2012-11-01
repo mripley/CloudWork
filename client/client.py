@@ -8,9 +8,14 @@
 import pika
 import threading,time,sys
 import fib_pb2
+import sys
 
-#QHost = "sdr.cs.colorado.edu"
-QHost= '149.165.158.106'
+if(len(sys.argv) < 2):
+    print "Usage ./client.py <ip address of queue>"
+    sys.exit(1)
+
+
+QHost= sys.argv[1] #'149.165.158.103'
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(host=QHost))
 
