@@ -6,10 +6,12 @@ import pika
 import threading,time,sys
 import fib_pb2
 
-#Q_IP_PATH = "/tmp/data-scale/queue_ip"
-Q_IP_PATH= "localhost"
+Q_IP_PATH = "/tmp/data-scale/queue_ip"
+#Q_IP_PATH= "localhost"
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(Q_IP_PATH))
+ip = open(Q_IP_PATH, "r").read()
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(ip))
 recvchan = connection.channel()
 sendchan = connection.channel()
  

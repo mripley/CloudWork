@@ -11,6 +11,8 @@ import subprocess
 
 import utility
 
+MQ_PORT = 5672
+
 def conn_from_env():
 
     ec2_access = os.getenv("EC2_ACCESS_KEY")
@@ -55,7 +57,7 @@ def wait_on_instances(instances, poll=5, timeout=10000):
     
 # creates instances and waits for them to come up.
 # returns the reservation associated with these instances
-def create_instances(img_id, key, num, conn=None, ud_path=None):
+def create_instances(img_id, key, num, conn=None, ud_path=None, security=None):
     # if we don't have a conneciton make one
     if(conn == None):
         print "No connection, making a new one"
@@ -64,7 +66,8 @@ def create_instances(img_id, key, num, conn=None, ud_path=None):
     print "spinning up instances"
     cloud_init_file = open(ud_path, "r")
     res = conn.run_instances(image_id = img_id, min_count=num, max_count=num,
-                             key_name=key, user_data=cloud_init_file.read())
+                             key_name=key, user_data=cloud_init_file.read(),
+                             security_groups=security)
 
     print "waiting for instances to come up"
     wait_on_instances(res.instances)
@@ -82,6 +85,7 @@ def write_user_txt(server_ip, outPath):
     print >>fp, "cd /tmp/data-scale"
     print >>fp, "echo %s > queue_ip" %(server_ip)
     print >>fp, "git clone https://github.com/mripley/CloudWork.git"
+    print >>fp, "nohup python /tmp/data-scale/CloudWork/client/compute.py
 
 #compiles the init.txt and user.txt into the combined archive
 def compile_user_data(output, init, user):
@@ -102,9 +106,14 @@ def create_cloud():
     # grab a connection 
     conn = conn_from_env()
 
+    #print "----CREATING SECURITY GROUP----"
+    #sg = conn.create_security_group("mripley-mq-server", "security group for our queue server")
+    #sg.authorize('tcp', MQ_PORT, MQ_PORT, '0.0.0.0/0')
+
     print "----CREATING QUEUE SERVER----"
     # create out rabbit mq server and wait for it to come up
-    mq_res = create_instances("ami-0000000d", "mripleykey", 1, conn, ud_path=rabbitmq_config)
+    mq_res = create_instances("ami-0000000d", "mripleykey", 1, conn, 
+                              ud_path=rabbitmq_config, security=['mmonaco-sg'])
     # track this req
     res.append(mq_res)
     
